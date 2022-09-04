@@ -203,9 +203,6 @@ class BybitUnityGateway(BaseGateway):
         """
         处理定时任务
         """
-        orderid_map = self.ws_trade_api.orderid_map
-        if len(orderid_map) > 2000:
-            del orderid_map[list(orderid_map)[0]]
         self.query_account()
 
         if self.query_contracts:
@@ -1006,7 +1003,6 @@ class BybitWebsocketTradeApi(WebsocketClient):
         self.key = ""
         self.secret = b""
         self.callbacks: Dict[str, Callable] = {}
-        self.orderid_map:Dict[str,OrderData] = {}
     #-------------------------------------------------------------------------------------------------   
     def connect(
         self, key: str, secret: str, server: str, proxy_host: str, proxy_port: int,proxy_type:str,
@@ -1108,10 +1104,6 @@ class BybitWebsocketTradeApi(WebsocketClient):
                 gateway_name=self.gateway_name,
             )
             self.gateway.on_trade(trade)
-            if trade.orderid in self.orderid_map:
-                order = self.orderid_map[trade.orderid]
-                order.traded = float(trade_data["orderQty"]) - float(trade_data["leavesQty"])
-                self.order_manager.on_order(order)
     #-------------------------------------------------------------------------------------------------   
     def on_order(self, packet):
         """
@@ -1121,7 +1113,7 @@ class BybitWebsocketTradeApi(WebsocketClient):
             order = self.order_manager.get_order_with_sys_orderid(sys_orderid)
 
             if order:
-                #order.traded = float(order_data["qty"]) - float(order_data["leavesQty"])
+                order.traded = float(order_data["cumExecQty"])
                 order.status = STATUS_BYBIT2VT[order_data["orderStatus"]]
             else:
                 # Use sys_orderid as local_orderid when
@@ -1144,7 +1136,7 @@ class BybitWebsocketTradeApi(WebsocketClient):
                     direction=DIRECTION_BYBIT2VT[order_data["side"]],
                     price=float(order_data["price"]),
                     volume=float(order_data["qty"]),
-                    #traded=float(order_data["qty"]) - float(order_data["leavesQty"]),
+                    traded=float(order_data["cumExecQty"]),
                     status=STATUS_BYBIT2VT[order_data["orderStatus"]],
                     datetime= order_datetime,
                     gateway_name=self.gateway_name
@@ -1152,7 +1144,6 @@ class BybitWebsocketTradeApi(WebsocketClient):
                 if order_data["reduceOnly"]:
                     order.offset = Offset.CLOSE
             self.order_manager.on_order(order)
-            self.orderid_map[order.orderid] = order
     #-------------------------------------------------------------------------------------------------   
     def on_position(self, packet):
         """
