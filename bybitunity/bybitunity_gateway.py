@@ -692,7 +692,6 @@ class BybitRestApi(RestClient):
             "symbol":symbol,
             "direction":"next"
         }
-
         #self.add_request( "GET", "/unified/v3/private/order/unfilled-orders", callback=self.on_query_order, params=params )    #实时查询活动委托单
         self.add_request( "GET", "/unified/v3/private/order/list", callback=self.on_query_order, params=params )
     #-------------------------------------------------------------------------------------------------   
@@ -742,8 +741,8 @@ class BybitRestApi(RestClient):
                     datetime= order_datetime,
                     gateway_name=self.gateway_name
                 )
-                if "reduceOnly" in order_data and order_data["reduceOnly"]:
-                    order.offset = Offset.CLOSE
+            if order_data["reduceOnly"]:
+                order.offset = Offset.CLOSE
             self.order_manager.on_order(order)
     #-------------------------------------------------------------------------------------------------   
     def query_history(self, req: HistoryRequest) -> List[BarData]:
@@ -1141,8 +1140,8 @@ class BybitWebsocketTradeApi(WebsocketClient):
                     datetime= order_datetime,
                     gateway_name=self.gateway_name
                 )
-                if order_data["reduceOnly"]:
-                    order.offset = Offset.CLOSE
+            if order_data["reduceOnly"]:
+                order.offset = Offset.CLOSE
             self.order_manager.on_order(order)
     #-------------------------------------------------------------------------------------------------   
     def on_position(self, packet):
