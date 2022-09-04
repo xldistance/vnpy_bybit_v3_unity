@@ -688,7 +688,7 @@ class BybitRestApi(RestClient):
         """
         params = {
             "category":self.get_category(symbol),
-            "limit": 50,
+            "limit": 20,
             "symbol":symbol,
             "direction":"next"
         }
