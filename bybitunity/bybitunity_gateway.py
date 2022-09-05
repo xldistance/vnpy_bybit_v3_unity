@@ -802,11 +802,12 @@ class BybitRestApi(RestClient):
                     )
                     buf.append(bar)
                 history.extend(buf)
-                # Break if last data collected
-                if len(history) >= count:
+                # 收集超过1440根bar退出循环
+                if len(history) >= 1440:
                     break
                 # Update start time
-                start_time = int((bar.datetime + TIMEDELTA_MAP[req.interval]).timestamp())
+                start_time = int((datetime.fromtimestamp(start_time) - timedelta(minutes= 200)).timestamp())
+
         if not history:
             msg = f"未获取到合约：{req.vt_symbol}历史数据"
             self.gateway.write_log(msg)
