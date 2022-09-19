@@ -781,9 +781,14 @@ class BybitRestApi(RestClient):
                 continue
             else:
                 data = resp.json()
-                if data["retCode"] == 10001:
+                if not data:
                     msg = f"无法获取合约：{req.vt_symbol}历史数据"
+                    self.gateway.write_log(msg)
+                    break
+                elif data["retCode"] == 10001:
                     delete_dr_data(req.symbol,self.gateway_name)
+                    msg = f"无法获取合约：{req.vt_symbol}历史数据"
+                    self.gateway.write_log(msg)
                     break
                 buf = []
                 for data in data["result"]["list"]:
